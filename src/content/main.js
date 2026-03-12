@@ -1,15 +1,24 @@
 (() => {
+	// 开启严格模式
 	'use strict';
+	
+	// 初始化，尝试读取globalThis.ClaudeCounter，没有就创建一个。
+	if (!globalThis.ClaudeCounter) {
+		globalThis.ClaudeCounter = {};
+	}
+	const CC = globalThis.ClaudeCounter;
 
-	const CC = (globalThis.ClaudeCounter = globalThis.ClaudeCounter || {});
+	// 如果已初始化就直接推出；防止重复初始化。(比如初始化一半挂掉了又初始化一次)
 	if (CC.__started) return;
 	CC.__started = true;
 
+	// 获取url栏位里的对话id
 	function getConversationId() {
 		const match = window.location.pathname.match(/\/chat\/([^/?]+)/);
 		return match ? match[1] : null;
 	}
 
+	// 获取用户的组织id（Claude用组织的概念来管理用户账号，相当于用户所在的房子，这里则是获取房子的地址，但还没找到用户本人是谁）。
 	function getOrgIdFromCookie() {
 		try {
 			return document.cookie
@@ -27,6 +36,7 @@
 	 * @param {string} selector - CSS selector
 	 * @param {number} [timeoutMs] - Optional timeout in ms. Returns null if timeout expires.
 	 */
+	// 
 	function waitForElement(selector, timeoutMs) {
 		return new Promise((resolve) => {
 			const existing = document.querySelector(selector);

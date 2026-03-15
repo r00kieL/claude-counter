@@ -1,6 +1,61 @@
 (() => {
 	'use strict';
 
+	let lang = 'zh';
+	const LABELS = {
+		en: {
+			resetIn: (t) => ` · resets in ${t}`,
+
+			tokens: 'tokens',
+			tokensDetail:
+				"Approximate tokens (excludes system prompt).\n" +
+				"Uses a generic tokenizer, may differ from Claude's count.\n" +
+				"Becomes invalid after context compaction.\n" +
+				"Bar scale: 200k tokens (Claude's maximum context length, will compact before then).",
+
+			cachedDetail:
+				"Messages sent while cached are significantly cheaper.", 
+			
+			session: "Session",
+			sessionDetail:
+				"5-hour session window.\n" +
+				"The bar shows your usage.\n" +
+				"The line marks where you are in the window.",
+
+			weekly: "Weekly",
+			weeklyDetail:
+				"7-day usage window.\n" +
+				"The bar shows your usage.\n" +
+				"The line marks where you are in the window."
+
+		},
+		zh: {
+			resetIn: (t) => ` ${t}后重置`,
+
+			tokens: 'token数',
+			tokensDetail:
+				"大致的 token 数（不包含系统提示词，仅供参考）。\n" +
+				"使用通用分词器统计，结果可能和 Claude 的计数不同。\n" +
+				"发生上下文压缩后，此统计将不再准确。\n" +
+				"进度条刻度按 200k token 计算（Claude 的标准最大上下文长度，在达到前就会开始压缩）。",
+			
+			cachedDetail:
+				"缓存期间发送的消息成本显著降低。",
+			
+			session: "会话",
+			sessionDetail:
+				"5 小时会话窗口。\n" +
+				"进度条显示您的使用情况。\n" +
+				"线条标记您在窗口中的位置。",
+
+			weekly: "周额度",
+			weeklyDetail:
+				"7 天使用窗口。\n" +
+				"进度条显示您的使用情况。\n" +
+				"线条标记您在窗口中的位置。"
+		}
+	};
+
 	const CC = (globalThis.ClaudeCounter = globalThis.ClaudeCounter || {});
 
 	function formatSeconds(totalSeconds) {
@@ -10,16 +65,24 @@
 	}
 
 	function formatResetCountdown(timestampMs) {
+		// <= 0的情况，表示重置时间到
 		const diffMs = timestampMs - Date.now();
-		if (diffMs <= 0) return '0m';
+		if (diffMs <= 0) return '0s';
 
-		const totalMinutes = Math.round(diffMs / (1000 * 60));
+		// < 1分钟的情况，直接返回秒数
+		const totalSecond = Math.floor(diffMs / 1000);
+		if (totalSecond < 60) return `${totalSecond}s`;
+
+		// < 1小时的情况，转换为分钟
+		const totalMinutes = Math.round(totalSecond / 60);
 		if (totalMinutes < 60) return `${totalMinutes}m`;
 
+		// < 1天的情况，转换为小时
 		const hours = Math.floor(totalMinutes / 60);
 		const minutes = totalMinutes % 60;
 		if (hours < 24) return `${hours}h ${minutes}m`;
 
+		// >= 1天的情况，转换为天
 		const days = Math.floor(hours / 24);
 		const remHours = hours % 24;
 		return `${days}d ${remHours}h`;
@@ -116,6 +179,9 @@
 			this.sessionWindowStartMs = null;
 			this.weeklyWindowStartMs = null;
 			this.refreshingUsage = false;
+
+			this.sessionResetSpan = null;
+			this.weeklyResetSpan = null;
 
 			this.domObserver = null;
 		}
@@ -215,6 +281,8 @@
 
 			this.sessionUsageSpan = document.createElement('span');
 			this.sessionUsageSpan.className = 'cc-usageText';
+			// this.sessionUsageSpan.className.appendChild(document.createElement('span'));
+			// this.sessionUsageSpan.className.appendChild(document.createElement('span'));
 
 			this.sessionBar = document.createElement('div');
 			this.sessionBar.className = 'cc-bar cc-bar--usage';
@@ -269,7 +337,7 @@
 
 		_setupTooltips() {
 			this.lengthTooltip = makeTooltip(
-				"Approximate tokens (excludes system prompt).\nUses a generic tokenizer, may differ from Claude's count.\nBecomes invalid after context compaction.\nBar scale: 200k tokens (Claude's maximum context length, will compact before then)."
+				LABELS[lang].tokensDetail
 			);
 			setupTooltip(
 				this.lengthGroup,
@@ -279,19 +347,25 @@
 
 			setupTooltip(
 				this.cachedDisplay,
-				makeTooltip("Messages sent while cached are significantly cheaper."),
+				makeTooltip(
+					LABELS[lang].cachedDetail
+				),
 				{ topOffset: 8 }
 			);
 
 			setupTooltip(
 				this.sessionGroup,
-				makeTooltip("5-hour session window.\nThe bar shows your usage.\nThe line marks where you are in the window."),
+				makeTooltip(
+					LABELS[lang].sessionDetail
+				),
 				{ topOffset: 8 }
 			);
 
 			setupTooltip(
 				this.weeklyGroup,
-				makeTooltip("7-day usage window.\nThe bar shows your usage.\nThe line marks where you are in the window."),
+				makeTooltip(
+					LABELS[lang].weeklyDetail
+				),
 				{ topOffset: 8 }
 			);
 		}

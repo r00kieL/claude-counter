@@ -65,24 +65,24 @@
 	}
 
 	function formatResetCountdown(timestampMs) {
-		// <= 0的情况，表示重置时间到
+		// <= 0: reset time reached
 		const diffMs = timestampMs - Date.now();
 		if (diffMs <= 0) return '0s';
 
-		// < 1分钟的情况，直接返回秒数
+		// < 1 min: show seconds
 		const totalSecond = Math.floor(diffMs / 1000);
 		if (totalSecond < 60) return `${totalSecond}s`;
 
-		// < 1小时的情况，转换为分钟
+		// < 1 hour: show minutes
 		const totalMinutes = Math.round(totalSecond / 60);
 		if (totalMinutes < 60) return `${totalMinutes}m`;
 
-		// < 1天的情况，转换为小时
+		// < 1 day: show hours
 		const hours = Math.floor(totalMinutes / 60);
 		const minutes = totalMinutes % 60;
 		if (hours < 24) return `${hours}h ${minutes}m`;
 
-		// >= 1天的情况，转换为天
+		// >= 1 day: show days
 		const days = Math.floor(hours / 24);
 		const remHours = hours % 24;
 		return `${days}d ${remHours}h`;
@@ -184,6 +184,8 @@
 			this.weeklyResetSpan = null;
 
 			this.domObserver = null;
+			
+			this.sessionResetMs = null;
 		}
 
 		getProgressChrome() {
@@ -529,10 +531,17 @@
 			if (session && typeof session.utilization === 'number') {
 				const rawPct = session.utilization;
 				const pct = Math.round(rawPct * 10) / 10;
+
+				if (this.lastSessionPct !== null && this.lastSessionPct > rawPct) {
+					// 播放重置动画
+				}
+
 				this.sessionResetMs = session.resets_at ? Date.parse(session.resets_at) : null;
 				this.sessionWindowStartMs = this.sessionResetMs ? this.sessionResetMs - 5 * 60 * 60 * 1000 : null;
 				const resetText = this.sessionResetMs ? ` · resets in ${formatResetCountdown(this.sessionResetMs)}` : '';
 				this.sessionUsageSpan.textContent = `Session: ${pct}%${resetText}`;
+
+				this.lastSessionPct = rawPct;
 
 				const width = Math.max(0, Math.min(100, rawPct));
 				this.sessionBarFill.style.width = `${width}%`;

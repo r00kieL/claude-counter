@@ -22,6 +22,7 @@
 | 1   | [ ] **插件加载展开动画**  | 2–4 小时  | 读 `attachHeader()` / `attachUsageLine()`，在 UI 首次挂载时加展开效果（`opacity` + `transform` 或 `max-height`）；注意 DOM 重挂载时别每次都播，可用「本页只播一次」标记 |
 | 2   | [x] **倒计时抖动 bug** | 0.5–1 天 | 学 `font-variant-numeric: tabular-nums`、`min-width`；在 `tick()` 里对比新旧文本，值未变则不更新 DOM；用 DevTools Layout 观察 reflow |
 | 3   | [ ] **额度三色进度条** | 2–4 小时 | 读现有 `cc-warn` 实现（≥90% 变红）；扩展为三段：0–33% 默认蓝、33–66% 黄、66%+ 红；在 `constants.js` 加黄色常量，`setUsage()` 按 `width` 切换 class，`styles.css` 加 `.cc-caution` 等 |
+| 4   | [ ] **时间参数调试器** | 0.5–1 天 | 开发模式下可手动设置 `sessionResetMs` / `weeklyResetMs` / 缓存截止时间等，方便调试倒计时与窗口 rollover；可用 `localStorage` 开关 + 简单面板或 `console` API，勿影响正式用户 |
 
 
 **阶段小结**：做完应能熟练改 header / usage 行的 DOM 和 CSS，理解 `tick()` 每秒刷新机制、UI 挂载时机，以及进度条颜色 class 体系。
@@ -93,7 +94,7 @@
 跟通数据流（半天）
   main.js → bridge-client → bridge.js → ui.js
        ↓
-第一阶段 #1 #2 #3  （CSS + DOM + 进度条颜色）
+第一阶段 #1 #2 #3 #4  （CSS + DOM + 进度条颜色 + 调试器）
        ↓
 第二阶段 #4 #5  （i18n + 状态样式）
        ↓

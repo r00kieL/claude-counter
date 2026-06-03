@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
 	'use strict';
 
 	let lang = 'zh';
@@ -14,8 +14,8 @@
 				"Bar scale: 200k tokens (Claude's maximum context length, will compact before then).",
 
 			cachedDetail:
-				"Messages sent while cached are significantly cheaper.", 
-			
+				"Messages sent while cached are significantly cheaper.",
+
 			session: "Session",
 			sessionDetail:
 				"5-hour session window.\n" +
@@ -38,10 +38,10 @@
 				"使用通用分词器统计，结果可能和 Claude 的计数不同。\n" +
 				"发生上下文压缩后，此统计将不再准确。\n" +
 				"进度条刻度按 200k token 计算（Claude 的标准最大上下文长度，在达到前就会开始压缩）。",
-			
+
 			cachedDetail:
 				"缓存期间发送的消息成本显著降低。",
-			
+
 			session: "会话",
 			sessionDetail:
 				"5 小时会话窗口。\n" +
@@ -64,6 +64,7 @@
 		return `${minutes}:${String(seconds).padStart(2, '0')}`;
 	}
 
+	const pad2 = (n) => (n < 10 ? '\u2007' : '') + n;
 	function formatResetCountdown(timestampMs) {
 		// <= 0: reset time reached
 		const diffMs = timestampMs - Date.now();
@@ -71,21 +72,21 @@
 
 		// < 1 min: show seconds
 		const totalSeconds = Math.floor(diffMs / 1000);
-		if (totalSeconds < 60) return `${totalSeconds}s`;
+		if (totalSeconds < 60) return `${pad2(totalSeconds)}s`;
 
 		// < 1 hour: show minutes
 		const totalMinutes = Math.round(totalSeconds / 60);
-		if (totalMinutes < 60) return `${totalMinutes}m`;
+		if (totalMinutes < 60) return `${pad2(totalMinutes)}m`;
 
 		// < 1 day: show hours
 		const hours = Math.floor(totalMinutes / 60);
 		const minutes = totalMinutes % 60;
-		if (hours < 24) return `${hours}h ${minutes}m`;
+		if (hours < 24) return `${pad2(hours)}h ${pad2(minutes)}m`;
 
 		// >= 1 day: show days
 		const days = Math.floor(hours / 24);
 		const remHours = hours % 24;
-		return `${days}d ${remHours}h`;
+		return `${pad2(days)}d ${pad2(remHours)}h`;
 	}
 
 	function setupTooltip(element, tooltip, { topOffset = 10 } = {}) {
@@ -184,7 +185,7 @@
 			this.weeklyResetSpan = null;
 
 			this.domObserver = null;
-			
+
 			this.sessionResetMs = null;
 		}
 
